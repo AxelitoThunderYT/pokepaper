@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pokepaper</title>
+<link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#2b2a4c;--paper:#fbf6e6;--line:#cfe0ee;--red:#d9453d;--card:#fffdf5}
+@media(prefers-color-scheme:dark){:root{--ink:#e9e6d8;--paper:#22222e;--line:#33384a;--card:#2b2c3b}}
+*{box-sizing:border-box}
+body{margin:0;font:18px 'Patrick Hand','Comic Sans MS',cursive;color:var(--ink);background:var(--paper) repeating-linear-gradient(transparent 0 31px,var(--line) 31px 32px);min-height:100vh}
+#app{max-width:980px;margin:auto;padding:14px}
+h1{font-size:2.2em;margin:.2em 0;color:var(--red);text-align:center}h2{margin:.4em 0}h3{margin:.6em 0 .2em}
+.st{display:flex;flex-wrap:wrap;gap:6px 14px;background:var(--card);border:2px solid var(--ink);border-radius:10px;padding:6px 12px;margin-bottom:8px}
+.tm,.vs,.ac,.opts{display:flex;flex-wrap:wrap;gap:8px}
+.pk{background:var(--card);border:2px solid var(--ink);border-radius:12px;padding:8px;width:170px;text-align:center;display:flex;flex-direction:column;gap:3px;align-items:center}
+.pk.f{opacity:.45;filter:grayscale(1)}.pk img{width:90px;height:90px;object-fit:contain}.pk small{font-size:.75em}
+.vs .pk{width:230px;flex:1}.vs .pk img{width:130px;height:130px}
+.chip{color:#fff;border-radius:9px;padding:0 7px;font-size:.75em;margin:0 1px;text-shadow:0 1px 1px #0006}
+.bar{width:100%;height:10px;background:#0002;border-radius:6px;overflow:hidden}.bar i{display:block;height:100%;background:#4caf50}
+button{font:inherit;color:var(--ink);background:var(--card);border:2px solid var(--ink);border-radius:10px;padding:5px 12px;cursor:pointer;box-shadow:2px 2px 0 var(--ink)}
+button:hover:not(:disabled){background:#ffe27a;color:#222}button:disabled{opacity:.4;cursor:not-allowed}.rl{border-color:var(--red);color:var(--red)}
+.big{font-size:1.2em;padding:8px 18px}.lg{background:var(--card);border:2px dashed var(--ink);border-radius:10px;padding:4px 12px;margin-top:10px}.lg p{margin:3px 0}
+.msg{background:#ffe27a;color:#222;border-radius:8px;padding:5px 12px;margin:6px 0}.ctr{text-align:center}
+.mode{flex:1;min-width:250px;padding:14px;text-align:left}
+#ov{position:fixed;inset:0;background:#000a;display:flex;align-items:center;justify-content:center;z-index:9}.ob{background:var(--card);border:3px solid var(--ink);border-radius:16px;padding:20px 44px;text-align:center}.dn{font-size:5em}.dn>b,.dn>img{display:inline-block;animation:wg .25s infinite}.dn.stop{color:var(--red)}.dn.stop>b,.dn.stop>img{animation:pop .5s}@keyframes wg{50%{transform:rotate(25deg) scale(1.1)}}@keyframes pop{50%{transform:scale(1.6)}}
+.shn{animation:gl 1s infinite alternate}@keyframes gl{to{filter:drop-shadow(0 0 12px gold) brightness(1.2)}}
+.pk[data-tip]{position:relative}.pk[data-tip]:hover::after{content:attr(data-tip);position:absolute;bottom:100%;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:5px 9px;border-radius:8px;white-space:pre;font-size:.8em;z-index:5;text-align:left;pointer-events:none}
+.dx{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}.dx>div{background:var(--card);border:2px solid var(--ink);border-radius:10px;text-align:center;padding:4px;font-size:.8em}.dx img{width:80px;height:80px;object-fit:contain}.dx .q{font-size:3em;height:80px;line-height:80px;opacity:.4}
+.dn span{font-size:18px;display:block}.ob img[src*=items]{image-rendering:pixelated}
+#cv{width:min(72vw,470px);aspect-ratio:1;background:conic-gradient(#ddd 25%,#fff 0 50%,#ddd 0 75%,#fff 0) 0 0/24px 24px;border:2px solid var(--ink);touch-action:none;cursor:crosshair}.pt{display:flex;gap:14px;flex-wrap:wrap;max-height:95vh;overflow:auto;justify-content:center}.sd{display:flex;flex-direction:column;gap:8px;align-items:stretch;min-width:150px}.sd img{align-self:center}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#ffe27a;color:#222;border:2px solid #222;border-radius:12px;padding:8px 16px;z-index:20;animation:pop .5s}
+</style></head><body><div id="app"></div>
+<script>
+const $=s=>document.querySelector(s),d6=()=>1+Math.random()*6|0;
+const slug=n=>n.toLowerCase().replace(/\./g,'').replace(/'/g,'').replace(/\s+/g,'-');
+const DN={'nidoran-f':'Nidoran♀','nidoran-m':'Nidoran♂',farfetchd:"Farfetch'd",'mr-mime':'Mr. Mime'};const pretty=s=>DN[s]||s.split('-').map(w=>w[0].toUpperCase()+w.slice(1)).join(' ');
+const TY={normal:['Normal','#a8a77a'],fire:['Fuego','#ee8130'],water:['Agua','#6390f0'],electric:['Eléctrico','#d9b000'],grass:['Planta','#7ac74c'],ice:['Hielo','#5cbcb8'],fighting:['Lucha','#c22e28'],poison:['Veneno','#a33ea1'],ground:['Tierra','#c9a23f'],flying:['Volador','#a98ff3'],psychic:['Psíquico','#f95587'],bug:['Bicho','#a6b91a'],rock:['Roca','#b6a136'],ghost:['Fantasma','#735797'],dragon:['Dragón','#6f35fc'],dark:['Siniestro','#705746'],steel:['Acero','#8f8fb0'],fairy:['Hada','#d685ad']};
+const SE={fire:'grass ice bug steel',water:'fire ground rock',electric:'water flying',grass:'water ground rock',ice:'grass ground flying dragon',fighting:'normal ice rock dark steel',poison:'grass fairy',ground:'fire electric poison rock steel',flying:'grass fighting bug',psychic:'fighting poison',bug:'grass psychic dark',rock:'fire ice flying bug',ghost:'psychic ghost',dragon:'dragon',dark:'psychic ghost',steel:'ice rock fairy',fairy:'fighting dragon dark',normal:''};
+for(const k in SE)SE[k]=SE[k].split(' ');
+// Rutas por gimnasios derrotados: [ruta A, ruta B, ruta bonus]; formato Nombre:dados
+const RT=[
+["Rattata:12|Pidgey:34|Mankey:56","Caterpie:12|Weedle:34|Metapod:5|Pikachu:6",0],
+["Nidoran M:12|Nidoran F:34|Ekans:5|Jigglypuff:6","Zubat:12|Clefairy:34|Paras:5|Geodude:6","Oddish:12|Bellsprout:34|Sandshrew:56"],
+["Spearow:12|Meowth:3|Bellsprout:4|Sandshrew:5|Oddish:6","Diglett:123|Drowzee:4|Onix:5|Dugtrio:6","Magnemite:12|Poliwag:34|Farfetch'd:5|Magikarp:6"],
+["Growlithe:12|Vulpix:34|Porygon:5|Abra:6","Doduo:12|Grimer:34|Fearow:5|Snorlax:6","Tangela:12|Krabby:34|Dodrio:5|Mew:6"],
+["Venonat:12|Chansey:3|Kangaskhan:4|Tauros:5|Ditto:6","Horsea:12|Goldeen:34|Shellder:5|Staryu:6","Poliwag:12|Rhyhorn:3|Tauros:4|Chansey:5|Kangaskhan:6"],
+["Machop:12|Ponyta:34|Hitmonlee:5|Hitmonchan:6","Cubone:12|Exeggcute:34|Gastly:56","Vaporeon:12|Flareon:34|Jolteon:56"],
+["Psyduck:12|Seel:34|Jynx:5|Lapras:6","Koffing:12|Lickitung:34|Magmar:56","Kabuto:12|Omanyte:34|Aerodactyl:5|Articuno:6"],
+["Voltorb:12|Magnemite:34|Electabuzz:56","Slowpoke:12|Mr. Mime:3|Farfetch'd:4|Pinsir:5|Scyther:6","Pikachu:12|Magneton:34|Raichu:5|Zapdos:6"],
+["Poliwag:12|Exeggcute:34|Meltan:5|Magikarp:6","Rhyhorn:12|Machop:34|Onix:5|Dratini:6","DADOS:1|Rhydon:2|Kabuto:3|Omanyte:4|Aerodactyl:5|Moltres:6"]];
+const parseR=s=>{const a=[];s.split('|').forEach(e=>{const[n,ds]=e.split(':');[...ds].forEach(c=>a[c-1]=n)});return a};
+const TR=["Rattata:4","Oddish:5,Bellsprout:5","Magnemite:6,Magnemite:6","Pidgeotto:4,Gloom:5,Weepinbell:5","Koffing:6,Venonat:6","Abra:3,Kadabra:8","Growlithe:7,Vulpix:7","Diglett:8,Sandshrew:8"];
+// Líderes: Nombre:mult:suma[:multVida]
+const GY=[["Brock","Geodude:1:1,Onix:2:0"],["Misty","Psyduck:1:1,Staryu:1:2,Starmie:2:0"],["Lt. Surge","Magnemite:1:2,Electabuzz:1:3,Raichu:2:0"],["Erika","Tangela:1:3,Vileplume:2:0,Victreebel:2:0"],["Koga","Golbat:1:2,Weezing:1:2,Muk:2:0,Venomoth:2:0"],["Sabrina","Slowbro:1:1,Jynx:1:1,Mr. Mime:1:1,Alakazam:2:0:3"],["Blaine","Rapidash:1:2,Magmar:1:3,Ninetales:2:0,Arcanine:2:0"],["Giovanni","Dugtrio:1:5,Rhydon:2:0,Nidoqueen:2:2,Nidoking:2:2"]];
+const LG=[["Lorelei","Jynx:8,Lapras:10"],["Bruno","Onix:8,Machamp:10"],["Agatha","Haunter:8,Gengar:10"],["Lance","Dragonair:8,Dragonite:12"],["Campeón","Pidgeot:12,Exeggutor:12,Arcanine:12,Gyarados:12,Eevee:15"]];
+// Evoluciones y rangos
+const EV={};'bulbasaur>ivysaur>venusaur;charmander>charmeleon>charizard;squirtle>wartortle>blastoise;caterpie>metapod>butterfree;weedle>kakuna>beedrill;pidgey>pidgeotto>pidgeot;rattata>raticate;spearow>fearow;ekans>arbok;pikachu>raichu;sandshrew>sandslash;nidoran-f>nidorina>nidoqueen;nidoran-m>nidorino>nidoking;clefairy>clefable;vulpix>ninetales;jigglypuff>wigglytuff;zubat>golbat;oddish>gloom>vileplume;paras>parasect;venonat>venomoth;diglett>dugtrio;meowth>persian;psyduck>golduck;mankey>primeape;growlithe>arcanine;poliwag>poliwhirl>poliwrath;abra>kadabra>alakazam;machop>machoke>machamp;bellsprout>weepinbell>victreebel;tentacool>tentacruel;geodude>graveler>golem;ponyta>rapidash;slowpoke>slowbro;magnemite>magneton;doduo>dodrio;seel>dewgong;grimer>muk;shellder>cloyster;gastly>haunter>gengar;drowzee>hypno;krabby>kingler;voltorb>electrode;exeggcute>exeggutor;cubone>marowak;koffing>weezing;rhyhorn>rhydon;horsea>seadra;goldeen>seaking;staryu>starmie;magikarp>gyarados;omanyte>omastar;kabuto>kabutops;dratini>dragonair>dragonite;meltan>melmetal'.split(';').forEach(c=>{const a=c.split('>');a.forEach((s,i)=>EV[s]={next:a[i+1],base:a[0]})});
+const RK={};[[1,0,2,'caterpie weedle rattata paras'],[2,0,3,'ekans sandshrew diglett nidoran-m nidoran-f bellsprout oddish abra machop gastly geodude poliwag pidgey'],[2,2,3,'bulbasaur charmander squirtle pikachu clefairy jigglypuff slowpoke'],[3,0,4,'spearow meowth psyduck venonat tentacool ponyta magnemite seel krabby voltorb cubone horsea goldeen dratini'],[3,2,4,'vulpix growlithe exeggcute zubat mankey shellder staryu doduo grimer koffing drowzee rhyhorn'],[5,0,6,'kabuto omanyte magikarp eevee meltan'],[0,4,0,'farfetchd onix hitmonlee hitmonchan lickitung chansey tangela kangaskhan mr-mime scyther jynx electabuzz magmar pinsir tauros lapras porygon aerodactyl snorlax'],[0,10,0,'articuno zapdos moltres mewtwo mew']].forEach(([cost,cap,evo,l],ri)=>l.split(' ').forEach(s=>RK[s]={cost,cap,evo,r:ri+1}));
+const evo=p=>{const e=EV[p.s];if(!e||!e.next)return null;const r=RK[e.base];return r&&r.cost?{cost:r.cost,evo:r.evo,to:e.next}:null};
+
+// PokeAPI
+const C={};
+async function info(s){if(C[s])return C[s];try{const j=await(await fetch('https://pokeapi.co/api/v2/pokemon/'+s)).json();return C[s]={t:j.types.map(x=>x.type.name),img:j.sprites.other['official-artwork'].front_default||j.sprites.front_default||'',shiny:j.sprites.other['official-artwork'].front_shiny||j.sprites.front_shiny||''}}catch(e){return{t:['normal'],img:'',fail:1}}}
+const atk=t=>t.length>1?(Math.random()<.5?[t[0],t[1]]:[t[1],t[0]]):[t[0],t[0]];
+async function mk(name,P,H,sh){const s=slug(name),i=await info(s);return{s,n:pretty(s),P,M:H,H,t:i.t,img:sh&&i.shiny?i.shiny:i.img,sh:sh?1:0,a:atk(i.t),f:0}}
+const capMon=async(name,sh)=>{const b=d6()*2+((RK[slug(name)]||{}).cap||0)+(sh?2:0)+stg(slug(name));return mk(name,b,b,sh)};
+let DEX={},DX=0;try{DEX=JSON.parse(localStorage.getItem('pkdex')||'{}')}catch(e){}
+const sv=()=>{try{localStorage.setItem('pkdex',JSON.stringify(DEX))}catch(e){}},dexK=(k,img)=>{DEX[k]={img};sv()};
+const dexAdd=p=>{const im=p.ai||p.img,d=DEX[p.s]||(DEX[p.s]={});if(p.sh){d.sh=1;d.simg=im;d.img=d.img||(C[p.s]||{}).img||im;unlock('v')}else d.img=im;sv();if(OBT.every(x=>DEX[x]))unlock('d');if(OBT.every(x=>DEX[x]&&DEX[x].sh))unlock('s')};
+const ALL='bulbasaur ivysaur venusaur charmander charmeleon charizard squirtle wartortle blastoise caterpie metapod butterfree weedle kakuna beedrill pidgey pidgeotto pidgeot rattata raticate spearow fearow ekans arbok pikachu raichu sandshrew sandslash nidoran-f nidorina nidoqueen nidoran-m nidorino nidoking clefairy clefable vulpix ninetales jigglypuff wigglytuff zubat golbat oddish gloom vileplume paras parasect venonat venomoth diglett dugtrio meowth persian psyduck golduck mankey primeape growlithe arcanine poliwag poliwhirl poliwrath abra kadabra alakazam machop machoke machamp bellsprout weepinbell victreebel tentacool tentacruel geodude graveler golem ponyta rapidash slowpoke slowbro magnemite magneton farfetchd doduo dodrio seel dewgong grimer muk shellder cloyster gastly haunter gengar onix drowzee hypno krabby kingler voltorb electrode exeggcute exeggutor cubone marowak hitmonlee hitmonchan lickitung koffing weezing rhyhorn rhydon chansey tangela kangaskhan horsea seadra goldeen seaking staryu starmie mr-mime scyther jynx electabuzz magmar pinsir tauros magikarp gyarados lapras ditto eevee vaporeon jolteon flareon porygon omanyte omastar kabuto kabutops aerodactyl snorlax articuno zapdos moltres dratini dragonair dragonite mewtwo mew meltan melmetal'.split(' ');
+const MEGA=new Set('venusaur charizard blastoise beedrill pidgeot clefable alakazam victreebel slowbro gengar kangaskhan pinsir starmie gyarados aerodactyl dragonite mewtwo raichu'.split(' ')),GIGA=new Set('venusaur charizard blastoise butterfree pikachu meowth machamp gengar kingler lapras eevee snorlax melmetal'.split(' '));
+const A='<b>⚪</b><span>¡Capturado!</span>',BI=[A,A,A,'<b>🔁</b><span>Se resiste…</span>','<b>🔁</b><span>Se resiste…</span>','<b>💨</b><span>¡Huye!</span>'],BI2=[A,A,A,...[1,2,3].map(()=>'<b>💨</b><span>¡Escapa!</span>')];
+let RM=0;
+const LEG=['articuno','zapdos','moltres','mewtwo','mew','meltan','melmetal'],STL=[['Bulbasaur',1],['Charmander',4],['Squirtle',7],['Caterpie',10],['Weedle',13],['Pidgey',16],['Nidoran F',29],['Nidoran M',32],['Poliwag',60],['Abra',63],['Machop',66],['Bellsprout',69],['Geodude',74],['Gastly',92],['Dratini',147]];
+const nmz=x=>x.split('-').map(w=>w[0].toUpperCase()+w.slice(1)).join(' '),RND=()=>S.mode=='rn'||S.mode=='rt';
+const rr=g=>{const p=ALL.filter(x=>(g>=6||!LEG.includes(x))&&(g>=5||!EV[x]||EV[x].base==x)),a=[];while(a.length<4){const x=p[Math.random()*p.length|0];if(!a.includes(x))a.push(x)}const[b,c,d,e]=a.map(nmz);return[b,b,c,c,d,e]};
+const stg=s=>{if(!RND())return 0;const e=EV[s];if(!e)return 0;let x=e.base,k=0;while(x!=s&&EV[x]&&EV[x].next){x=EV[x].next;k++}return k*((RK[e.base]||{}).evo||0)};
+function nick(i){const p=S.team[i],v=prompt('Mote para '+pretty(p.s)+' (vacío = quitar mote):',p.nn||'');if(v===null)return;p.nn=v.trim().slice(0,14);p.n=p.nn||pretty(p.s)+(p.reg?' ('+p.reg+')':'');R()}
+function tlb(){S.tlb=1;S.ph='luck';R()}
+const tip=()=>{const p=S.ph;
+ if(p=='starter')return 'Elige tu Pokémon inicial. Cada Pokémon tiene Poder (daño) y Vida, que empiezan en dado × 2 más bonos.';
+ if(p=='cap'){const c=S.q[0];return c&&c.mon?'Lanza la Pokéball: dado 1-3 lo capturas, 4-5 se resiste (segunda tirada) y 6 huye. En el tutorial está asegurado. Cada Pokémon tiene 1/25 de ser ✨shiny.':'Cada ruta es una oportunidad de captura: pulsa Explorar y el dado decide qué Pokémon aparece (hoy, un Vulpix).'}
+ if(p=='hub')return `Completa estos pasos y luego pulsa Combatir. ${S.tev?'✅':'⬜'} Evoluciona a tu inicial con ⬆ (cuesta fichas, da poder y salud y cura toda la vida; las fichas se ganan tras cada gimnasio). ${S.tlb?'✅':'⬜'} Prueba la Lucky Box. ${S.trg?'✅':'⬜'} Cambia a Vulpix a su forma regional. Con ✏ Mote le pones nombre a un Pokémon y con Liberar lo dejas ir (equipo máximo: 6).`;
+ if(p=='luck')return 'La Lucky Box se abre tras cada gimnasio: captura extra, curación de +6 o evolución. Hoy te tocará evolución.';
+ if(p=='luckevo')return 'Con la evolución eliges +3 fichas o una forma regional. Elige a Vulpix: sus tipos cambian (de Fuego a Hielo) y, con ellos, sus ataques.';
+ if(p=='pick')return 'Antes de cada combate eliges con qué Pokémon empiezas.';
+ if(p=='battle')return '⚔ Básico: daño ⌊poder/2⌋. 💥 Cargado: ⌊3·poder/4⌋, pero falla con 1-3. El dado suma de −2 a +2 y un ataque supereficaz suma +2 (mira los tipos). 🔄 Cambiar y 💊 Curar (restaura toda la vida de un Pokémon) gastan tu turno. Pasa el cursor sobre un Pokémon para ver sus ataques.';
+ return ''};
+const FACTS=['Los Pokémon shiny (1/25) tienen +2 de poder y salud, y los ves antes de intentar capturarlos.','Cada vez que un Pokémon evoluciona, se cura toda su vida.','Las curaciones en combate restauran toda la vida y se acumulan si no las usas durante un tramo.','Un ataque supereficaz suma +2 de daño: elige bien tus tipos.','El ataque cargado pega más fuerte, pero falla la mitad de las veces.','Al vencer a Giovanni eliges entre una Megapiedra (+5 de poder) o un Gigamax (+5 de salud máxima).','En Nuzlocke un Pokémon debilitado no vuelve jamás. Liberarlo no cuenta como muerte.','Con 6 Pokémon en el equipo puedes liberar a uno… o dejar ir al recién capturado.','La Lucky Box se abre tras cada gimnasio: capturas extra, curación o evolución.','Las formas regionales cambian los tipos de un Pokémon y, con ellos, sus ataques.','Los líderes tiran dados para el poder de cada Pokémon: nunca sabes qué tan fuertes serán.','En la Liga Pokémon no hay reanimaciones entre combates: planifica tu equipo.'];
+let FI=Math.random()*FACTS.length|0;setInterval(()=>{const e=$('#fact');if(e){FI=(FI+1)%FACTS.length;e.textContent='💡 '+FACTS[FI]}},5000);
+let RX=0;const itm=async s=>{try{return(await(await fetch('https://pokeapi.co/api/v2/item/'+s)).json()).sprites.default||''}catch(e){return''}};
+const pi=async ns=>{const a=await Promise.all(ns.map(n=>n=='DADOS'?0:info(slug(n))));return ns.map((n,k)=>n=='DADOS'?'<b>🎲</b><span>¡Evento Dados!</span>':(a[k].img?`<img src="${a[k].img}" width=110>`:'❓')+`<span>${n}</span>`)};
+function spin(title,it,fi,big){return new Promise(r=>{const o=document.createElement('div');o.id='ov';o.innerHTML=`<div class=ob><div>${tr(title)}</div><div class=dn><b>🎲</b></div></div>`;document.body.appendChild(o);const n=o.querySelector('.dn'),B=o.querySelector('.ob'),end=()=>{o.remove();r()};let i=0,t=40;const step=()=>{if(++i>=22){n.innerHTML=it[fi];n.classList.add('stop');if(big)setTimeout(()=>{B.innerHTML=tr(big+'<p><button class=big>¡Continuar!</button></p>');B.querySelector('button').onclick=end},900);else setTimeout(end,1000);return}n.innerHTML=it[Math.random()*it.length|0];t*=1.14;setTimeout(step,t)};step()})}
+const rulesHtml=`<h1>📓 Pokepaper</h1><button onclick="RX=0;R()">← Volver</button><div class=lg style="font-size:.95em"><h2>📜 Reglas del juego</h2>
+<h3>Modos</h3><p><b>Normal:</b> un Pokémon debilitado no puede usarse el resto del tramo y revive al completar un gimnasio (no hay reanimación entre los combates de la Liga). <b>Nuzlocke:</b> un debilitado muere para siempre y suma al contador de muertos; si caen todos, pierdes la partida. Liberar a un Pokémon no cuenta como muerte, pero no podrás recuperarlo. <b>Tutorial:</b> guía paso a paso con parámetros fijos. <b>Random Normal:</b> iniciales (3 al azar de 15) y rutas aleatorias (4 Pokémon por ruta): hasta el 5.º gimnasio solo salen primeras fases y especies de una etapa; después, cualquier fase con bono de evolución; desde el 6.º, también los legendarios. <b>Random Total:</b> igual, y además los Pokémon de entrenadores, líderes y Alto Mando son aleatorios con sus estadísticas originales.</p>
+<h3>Capturas</h3><p>Una oportunidad por ruta. Dado 1-3: capturado; 4-5: segunda tirada (1-3 capturado, si no escapa); 6: huye. Las rutas bonus solo se consiguen con la Lucky Box. Cada Pokémon (iniciales incluidos) tiene 1/25 de ser ✨shiny, con +2 de poder y salud; se ve antes de capturarlo. El equipo es de máximo 6: si capturas con el equipo lleno, liberas a uno o dejas ir al nuevo.</p>
+<h3>Estadísticas y ataques</h3><p>Poder y vida iniciales = dado × 2, más el bono de rango al capturar. La salud no supera la salud máxima (igual al poder, salvo con Gigamax). Un tipo: ambos ataques de ese tipo. Dos tipos: un ataque de cada uno, al azar.</p>
+<h3>Combate</h3><p>Cada turno eliges: <b>básico</b> (daño base ⌊poder/2⌋), <b>cargado</b> (⌊3·poder/4⌋; falla con 1-3), <b>cambiar</b> o <b>curar</b> (consumen el turno y el rival ataca). Modificador por dado: 1 = −2, 2 = −1, 3-4 = 0, 5 = +1, 6 = +2. Daño mínimo 0; supereficaz +2. Los entrenadores comunes solo usan el básico; líderes y Alto Mando a veces usan el cargado. Si los últimos Pokémon de ambos bandos caen en el mismo turno, pierdes.</p>
+<h3>Curación</h3><p>Curar restaura toda la vida de un Pokémon. Empiezas con 1 curación y ganas 1 más tras cada gimnasio; se acumulan si no las usas. Ganar a un entrenador cura +2 a todo el equipo y a un líder +5.</p>
+<h3>Progresión</h3><p>Inicial → 2 capturas → entrenador → líder, repetido en los 8 gimnasios; tras el 8.º hay 2 capturas más y la Liga (4 combates seguidos + campeón). Los gimnasios dan fichas de evolución: 1, 2 y 3 desde el tercero. Evolucionar (solo entre combates) cuesta fichas según el rango, da bonos de poder y salud y cura toda la vida.</p>
+<h3>Lucky Box</h3><p>Tras cada gimnasio. Gym 1-3: 1-3 captura extra, 4-6 curación de +6 al equipo. Desde el Gym 4: 1-2 captura extra, 3-4 curación +6, 5-6 evolución (+3 fichas o forma regional, que cambia tipos y ataques).</p>
+<h3>Recompensa de Giovanni</h3><p>Eliges una: <b>Megapiedra</b> (+5 de poder a un Pokémon que pueda megaevolucionar) o <b>Gigamax</b> (+5 de salud máxima y curación total).</p>
+<h3>Rangos</h3><p>R1: 1 ficha, +2 al evolucionar. R2: 2 fichas, +3. R3: 2 fichas, +2 al capturar y +3 al evolucionar. R4: 3 fichas, +4. R5: 3 fichas, +2 al capturar y +4 al evolucionar. R6: 5 fichas, +6. R7: +4 al capturar. R8: +10 al capturar.</p></div>`;
+const OBT=ALL.filter(x=>!['tentacool','tentacruel','eevee'].includes(x));
+const REG=[...'rattata raticate sandshrew sandslash vulpix ninetales diglett dugtrio meowth persian geodude graveler golem grimer muk raichu exeggutor marowak'.split(' ').map(x=>x+'-alola'),...'ponyta rapidash slowpoke slowbro farfetchd weezing mr-mime articuno zapdos moltres meowth'.split(' ').map(x=>x+'-galar'),...'growlithe arcanine voltorb electrode'.split(' ').map(x=>x+'-hisui')];
+let DT='n',SX=0,AX=0,SET={vol:.4,mute:0,lang:'es',pm:0},ST={w:0,nw:0,ev:0,u:{}};
+try{Object.assign(SET,JSON.parse(localStorage.getItem('pkset')||'{}'));Object.assign(ST,JSON.parse(localStorage.getItem('pkst')||'{}'))}catch(e){}
+const sS=()=>{try{localStorage.setItem('pkset',JSON.stringify(SET))}catch(e){}},ssv=()=>{try{localStorage.setItem('pkst',JSON.stringify(ST))}catch(e){}};
+// Idiomas: la clave es el texto en español
+const LD={},KS=[];`Rendirse|Give up|Desistir|Aufgeben|降参
+Reglas del juego|Game rules|Regras do jogo|Spielregeln|ゲームのルール
+Reglas|Rules|Regras|Regeln|ルール
+Logros|Achievements|Conquistas|Erfolge|実績
+Ajustes|Settings|Configurações|Einstellungen|設定
+Pokédex|Pokédex|Pokédex|Pokédex|ポケモン図鑑
+Volver al juego|Back to game|Voltar ao jogo|Zurück zum Spiel|ゲームに戻る
+Volver|Back|Voltar|Zurück|戻る
+Elige el modo de juego|Choose a game mode|Escolha o modo de jogo|Wähle den Spielmodus|ゲームモードを選ぼう
+Modo normal|Normal mode|Modo normal|Normaler Modus|ノーマルモード
+Modo Nuzlocke|Nuzlocke mode|Modo Nuzlocke|Nuzlocke-Modus|ナズロックモード
+Los Pokémon debilitados quedan fuera hasta completar el gimnasio, cuando reviven.|Fainted Pokémon are out until you complete the gym, when they revive.|Pokémon desmaiados ficam fora até completar o ginásio, quando revivem.|Besiegte Pokémon fallen aus, bis du die Arena schaffst; dann werden sie wiederbelebt.|ひんしのポケモンはジムクリアまで使えず、クリア後に復活します。
+Un Pokémon debilitado muere para siempre. Si caen todos, pierdes la partida.|A fainted Pokémon dies forever. If all fall, you lose the game.|Um Pokémon desmaiado morre para sempre. Se todos caírem, você perde o jogo.|Ein besiegtes Pokémon stirbt für immer. Fallen alle, verlierst du das Spiel.|ひんしのポケモンは二度と戻りません。全滅でゲームオーバーです。
+Imágenes:|Images:|Imagens:|Bilder:|画像:
+Pintor|Painter|Pintor|Maler|お絵かき
+Elige a tu Pokémon inicial|Choose your starter Pokémon|Escolha seu Pokémon inicial|Wähle dein Starter-Pokémon|最初のポケモンを選ぼう
+Gimnasios|Gyms|Ginásios|Arenen|ジム
+Fichas:|Tokens:|Fichas:|Marken:|チップ:
+Curaciones:|Heals:|Curas:|Heilungen:|回復:
+Muertos:|Dead:|Mortos:|Tote:|死亡:
+Tu equipo|Your team|Sua equipe|Dein Team|あなたのチーム
+Explorar ruta|Explore route|Explorar rota|Route erkunden|ルートを探索
+Lanzar Pokéball|Throw Pokéball|Lançar Pokéball|Pokéball werfen|ボールを投げる
+Combatir|Battle|Combater|Kämpfen|バトル
+Siguiente combate|Next battle|Próxima batalha|Nächster Kampf|次のバトル
+Elige tu Pokémon|Choose your Pokémon|Escolha seu Pokémon|Wähle dein Pokémon|ポケモンを選ぼう
+Básico|Basic|Básico|Basis|通常
+Cargado|Charged|Carregado|Aufgeladen|チャージ
+Cambiar|Switch|Trocar|Wechseln|交代
+Curar|Heal|Curar|Heilen|回復
+Continuar|Continue|Continuar|Weiter|続ける
+Liberar|Release|Liberar|Freilassen|逃がす
+¡Ganaste el combate!|You won the battle!|Você venceu a batalha!|Du hast den Kampf gewonnen!|バトルに勝った！
+Perdiste el combate|You lost the battle|Você perdeu a batalha|Du hast den Kampf verloren|バトルに負けた
+Nueva partida|New game|Novo jogo|Neues Spiel|ニューゲーム
+Idioma:|Language:|Idioma:|Sprache:|言語:
+Música:|Music:|Música:|Musik:|音楽:
+Shinys|Shiny|Shiny|Shiny|色違い
+Formas regionales|Regional forms|Formas regionais|Regionalformen|リージョンフォーム
+Mega evoluciones|Mega evolutions|Mega evoluções|Mega-Entwicklungen|メガシンカ
+Gigamax|Gigantamax|Gigamax|Gigadynamax|キョダイマックス
+Lápiz|Pen|Lápis|Stift|ペン
+Borrador|Eraser|Borracha|Radierer|消しゴム
+Rellenar|Fill|Preencher|Füllen|塗りつぶし
+Deshacer|Undo|Desfazer|Rückgängig|元に戻す
+Limpiar|Clear|Limpar|Leeren|全消去
+Listo|Done|Pronto|Fertig|完了
+Referencia|Reference|Referência|Referenz|参考
+Mote|Nickname|Apelido|Spitzname|ニックネーム
+Modo Random|Random mode|Modo Random|Random-Modus|ランダムモード
+Tutorial|Tutorial|Tutorial|Tutorial|チュートリアル
+Volver al menú|Back to menu|Voltar ao menu|Zurück zum Menü|メニューに戻る`.split('\n').forEach(l=>{const a=l.split('|');KS.push(a[0]);['en','pt','de','ja'].forEach((g,i)=>(LD[g]=LD[g]||{})[a[0]]=a[i+1])});
+const RE=new RegExp('(?<![\\p{L}\\d])('+KS.sort((a,b)=>b.length-a.length).map(k=>k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|')+')(?![\\p{L}])','gu');
+const tr=h=>{const D=LD[SET.lang];return D?h.replace(RE,m=>D[m]||m):h},out=h=>{$('#app').innerHTML=tr(h)};
+// Música
+const AU=new Audio('route3.mp3');AU.loop=true;AU.volume=SET.vol;
+addEventListener('pointerdown',()=>{if(!SET.mute&&AU.paused)AU.play().catch(()=>{})});
+const setVol=v=>{SET.vol=v/100;AU.volume=SET.vol;sS()},setMute=()=>{SET.mute=!SET.mute;SET.mute?AU.pause():AU.play().catch(()=>{});sS();R()},loadMusic=f=>{if(f){AU.src=URL.createObjectURL(f);if(!SET.mute)AU.play().catch(()=>{})}};
+const setHtml=()=>`<h1>📓 Pokepaper</h1><button onclick="SX=0;R()">← Volver</button><div class=lg><h2>⚙ Ajustes</h2><p>🎵 Música: <input type=range min=0 max=100 value=${SET.vol*100} oninput="setVol(this.value)"> <button onclick="setMute()">${SET.mute?'🔇':'🔊'}</button></p><p><input type=file accept="audio/*" onchange="loadMusic(this.files[0])"><br><small>route3.mp3 (junto al HTML) / carga tu propio archivo</small></p><p>🌐 Idioma: <select onchange="SET.lang=this.value;sS();R()">${[['es','Español'],['en','English'],['pt','Português'],['de','Deutsch'],['ja','日本語']].map(([k,n])=>`<option value=${k} ${SET.lang==k?'selected':''}>${n}</option>`).join('')}</select></p></div>`;
+// Logros
+const AC=[['w','Madera de campeón','Gana una partida.'],['n','Nuzlocker novato','Gana una partida en modo Nuzlocke.'],['n5','Nuzlocker experimentado','Gana 5 partidas en modo Nuzlocke.'],['n15','Nuzlocker Profesional','Gana 15 partidas en modo Nuzlocke.'],['v','Variocolor','Captura a un Pokémon Shiny.'],['vm','Maestro variocolor','Gana una partida solo con Pokémon Shinys.'],['d','Atraparlos a todos','Completa la Pokédex.'],['h','Anticura','Gana una partida sin utilizar curaciones.'],['r','De vacaciones','Transforma un Pokémon a su forma regional.'],['e','Maestro evolución','Evoluciona Pokémon 100 veces.'],['s','Atrapando estrellas','Consigue todos los Pokémon en su versión variocolor.'],['rt','Maestro de la aleatoriedad',"Gana una partida en el modo 'Random Total'."]];
+function unlock(id){if(ST.u[id])return;ST.u[id]=1;ssv();const a=AC.find(x=>x[0]==id),d=document.createElement('div');d.className='toast';d.textContent='🏆 '+a[1]+' — '+a[2];document.body.appendChild(d);setTimeout(()=>d.remove(),4500)}
+function gameWon(){ST.w++;unlock('w');if(S.mode=='rt')unlock('rt');if(S.mode=='nuz'){ST.nw++;unlock('n');if(ST.nw>=5)unlock('n5');if(ST.nw>=15)unlock('n15')}if(S.team.length&&S.team.every(p=>p.sh))unlock('vm');if(!S.usedHeal)unlock('h');ssv()}
+const achHtml=()=>`<h1>📓 Pokepaper</h1><button onclick="AX=0;R()">← Volver</button><h2>🏆 Logros ${Object.keys(ST.u).length}/${AC.length}</h2><div class=opts>${AC.map(([k,n,d])=>{const p={n5:ST.nw+'/5',n15:ST.nw+'/15',e:ST.ev+'/100'}[k];return `<div class=pk style="width:240px;${ST.u[k]?'':'opacity:.5'}"><b>${ST.u[k]?'🏆':'🔒'} ${n}</b><small>${d}</small>${p&&!ST.u[k]?`<small>${p}</small>`:''}</div>`}).join('')}</div>`;
+// Pokédex con pestañas
+const grid=(L,pre,sh)=>`<div class=dx>${L.map((x,i)=>{const d=DEX[pre+x],ok=sh?d&&d.sh:d;return ok?`<div><img src="${sh?d.simg:d.img}" alt="" class="${sh?'shn':''}"><br>#${i+1} ${pretty(x)}</div>`:`<div><div class=q>❓</div>#${i+1} ???</div>`}).join('')}</div>`;
+const dexHtml=()=>{const T5={n:['Normal',ALL,'',0],s:['Shinys',ALL,'',1],r:['Formas regionales',REG,'r:',0],m:['Mega evoluciones',[...MEGA],'m:',0],g:['Gigamax',[...GIGA],'g:',0]},[nm,L,p,sh]=T5[DT],k=L.filter(x=>{const d=DEX[p+x];return sh?d&&d.sh:d}).length;return `<h1>📓 Pokepaper</h1><button onclick="DX=0;R()">← Volver al juego</button> ${Object.keys(T5).map(q=>`<button ${q==DT?'disabled':''} onclick="DT='${q}';R()">${T5[q][0]}</button>`).join(' ')}<h2>📖 ${nm} ${k}/${L.length}</h2>${grid(L,p,sh)}`};
+// Pintor
+function fill(c,x,y,col){const g=c.getContext('2d'),w=c.width,h=c.height,im=g.getImageData(0,0,w,h),d=im.data,v=new Uint8Array(w*h),o=(y*w+x)*4,t=[d[o],d[o+1],d[o+2],d[o+3]],R_=parseInt(col.slice(1,3),16),G=parseInt(col.slice(3,5),16),B=parseInt(col.slice(5),16),st=[x,y];while(st.length){const yy=st.pop(),xx=st.pop();if(xx<0||yy<0||xx>=w||yy>=h||v[yy*w+xx])continue;const i=(yy*w+xx)*4;v[yy*w+xx]=1;if(Math.abs(d[i]-t[0])+Math.abs(d[i+1]-t[1])+Math.abs(d[i+2]-t[2])+Math.abs(d[i+3]-t[3])>60)continue;d[i]=R_;d[i+1]=G;d[i+2]=B;d[i+3]=255;st.push(xx+1,yy,xx-1,yy,xx,yy+1,xx,yy-1)}g.putImageData(im,0,0)}
+function paintIt(ref,name){return new Promise(res=>{const o=document.createElement('div');o.id='ov';o.innerHTML=tr(`<div class="ob pt"><div><h3>🎨 ${name}</h3><canvas id=cv width=512 height=512></canvas></div><div class=sd><b>Referencia</b><img src="${ref}" width=150 alt=""><button data-t=pen>✏️ Lápiz</button><button data-t=er>🧽 Borrador</button><button data-t=fill>🪣 Rellenar</button><input type=color id=co value="#e53935"><input type=range id=sz min=2 max=60 value=10><button id=un>↩ Deshacer</button><button id=cl>🗑 Limpiar</button><button id=ok class=big>✅ Listo</button></div></div>`);document.body.appendChild(o);
+ const c=o.querySelector('#cv'),g=c.getContext('2d'),co=o.querySelector('#co'),sz=o.querySelector('#sz'),H=[];let tool='pen',dr=0,lx,ly;
+ const q=e=>{const r=c.getBoundingClientRect();return[(e.clientX-r.left)*512/r.width|0,(e.clientY-r.top)*512/r.height|0]},snap=()=>{H.push(g.getImageData(0,0,512,512));if(H.length>30)H.shift()};
+ const st=(x,y)=>{g.globalCompositeOperation=tool=='er'?'destination-out':'source-over';g.strokeStyle=co.value;g.lineWidth=+sz.value;g.lineCap=g.lineJoin='round';g.beginPath();g.moveTo(lx,ly);g.lineTo(x,y);g.stroke();lx=x;ly=y};
+ o.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>tool=b.dataset.t);
+ c.onpointerdown=e=>{const[x,y]=q(e);snap();if(tool=='fill')return fill(c,x,y,co.value);dr=1;lx=x;ly=y;c.setPointerCapture(e.pointerId);st(x,y)};
+ c.onpointermove=e=>{if(dr){const[x,y]=q(e);st(x,y)}};c.onpointerup=()=>dr=0;
+ o.querySelector('#un').onclick=()=>{const p=H.pop();if(p)g.putImageData(p,0,0)};o.querySelector('#cl').onclick=()=>{snap();g.clearRect(0,0,512,512)};
+ o.querySelector('#ok').onclick=()=>{const u=c.toDataURL('image/png');o.remove();res(u)}})}
+const look=async p=>{p.ai=p.img;if(S.pm)p.img=await paintIt(p.img,p.n)};
+
+let S={ph:'mode'};
+const alive=()=>S.team.filter(p=>!p.f&&p.H>0);
+const chips=t=>[...new Set(t)].map(x=>`<span class=chip style="background:${TY[x][1]}">${TY[x][0]}</span>`).join('');
+const bar=p=>`<div class=bar><i style="width:${Math.min(100,100*p.H/p.M)}%"></i></div>`;
+
+function giveUp(){if(confirm(tr('Rendirse')+'?')){S={ph:'mode'}}R()}
+function init(mode){S={mode,stl:(mode=='rn'||mode=='rt')?STL.map(x=>[Math.random(),x]).sort((a,b)=>a[0]-b[0]).slice(0,3).map(x=>x[1]):0,team:[],dead:[],rel:[],deaths:0,tok:mode=='tut'?2:0,g:0,li:0,heals:1,pm:SET.pm,sh:[0,0,0].map(()=>Math.random()<1/25),ph:'starter',q:[],lg:[],msg:'',next:'trainer'};R()}
+async function starter(n,k){const sh=S.sh[k];S.ph='load';R();const v=d6()*2+2+(sh?2:0),m=await mk(n,v,v,sh);S.st=slug(n);await look(m);dexAdd(m);S.team.push(m);S.msg=`🎲 ${n}${sh?' ✨shiny✨':''} nace con poder y vida ${v}${sh?' (incluye +2 por shiny)':''}.`;startTramo(0)}
+function startTramo(bonus){
+ if(S.mode=='tut'){if(S.tq){S.ph='hub';S.next='trainer'}else{S.tq=1;S.q=[{l:'Ruta de práctica',t:Array(6).fill('Vulpix')}];S.ph='cap'}return R()}
+ S.q=[];const r=RT[S.g],T=i=>RND()?rr(S.g):parseR(r[i]);if(bonus&&(RND()?S.g>0:r[2]))S.q.push({l:'Ruta Bonus '+S.g,t:T(2)});S.q.push({l:'Ruta '+(2*S.g+1),t:T(0)},{l:'Ruta '+(2*S.g+2),t:T(1)});S.ph='cap';R()}
+function advance(){if(S.q.length)S.ph='cap';else{S.ph='hub';S.next=S.g<8?'trainer':'liga'}R()}
+
+async function explore(){const c=S.q[0],d=d6();let n=c.t[d-1],t=`🎲${d}: `;await spin('🎒 '+c.l,await pi(c.t),d-1);
+ if(n=='DADOS'){const e=d6(),ns=['Articuno','Zapdos','Moltres','Mewtwo','Mewtwo','Mewtwo'];await spin('✨ ¡Evento Dados!',await pi(ns),e-1);n=ns[e-1];t+=`¡Evento Dados! 🎲${e}: `}
+ c.mon=n;c.sh=S.mode!='tut'&&Math.random()<1/25;const i=await info(slug(n));c.img=c.sh&&i.shiny?i.shiny:i.img;S.msg=t+`aparece ${n}.`+(c.sh?' ✨ ¡¡ES SHINY!! ✨':'');R()}
+async function ball(){const c=S.q[0];let r=S.mode=='tut'?2:d6(),t=`🎲${r}`,ok=r<4;await spin('⚪ Pokéball',BI,r-1);
+ if(r==6)t+=' — el Pokémon huye.';else if(r>3){const r2=d6();await spin('⚪ Se resiste… ¡otra vez!',BI2,r2-1);ok=r2<4;t+=` → se resiste, 🎲${r2}`+(ok?'':' — escapa.')}
+ if(!ok){S.msg=t;S.q.shift();return advance()}
+ S.ph='load';R();const m=await capMon(c.mon,c.sh);S.q.shift();S.msg=`${t} — ¡${m.n}${m.sh?' ✨shiny✨':''} capturado! Poder y vida: ${m.P}.`;
+ if(S.team.length>=6){S.pend=m;S.ph='rel';R()}else{await look(m);dexAdd(m);S.team.push(m);advance()}}
+function skip(){S.msg=`Dejaste ir a ${S.pend.n}.`;S.pend=null;advance()}
+async function rel(i){const p=S.team[i];if(S.ph=='rel'){await look(S.pend);S.rel.push(p);S.team[i]=S.pend;dexAdd(S.pend);S.msg=`Liberaste a ${p.n}; ${S.pend.n} se une al equipo.`;S.pend=null;return advance()}
+ if(S.team.length<2)return alert('No puedes liberar a tu único Pokémon.');if(!confirm(`¿Liberar a ${p.n}? No podrás volver a usarlo.`))return;S.rel.push(p);S.team.splice(i,1);R()}
+async function evolve(i){const p=S.team[i],e=evo(p);if(!e||S.tok<e.cost)return;S.tok-=e.cost;let inf=await info(p.reg?e.to+'-'+p.reg:e.to);if(p.reg&&inf.fail){inf=await info(e.to);p.reg=0}
+ p.s=e.to;p.n=p.nn||pretty(e.to)+(p.reg?' ('+p.reg+')':'');p.P+=e.evo;p.M+=e.evo;p.H=p.f?0:p.M;{const a=p.sh&&inf.shiny?inf.shiny:inf.img;p.ai=a;p.img=S.pm?await paintIt(a,p.n):a}dexAdd(p);if(p.reg)dexK('r:'+p.s+'-'+p.reg,p.ai);if(inf.t.join()!=p.t.join()){p.t=inf.t;p.a=atk(inf.t)}S.msg=`${p.n}: +${e.evo} de poder y vida, ¡y se cura por completo!`;ST.ev++;S.tev=1;ssv();if(ST.ev>=100)unlock('e');R()}
+
+// Combate
+async function fight(){S.msg='';S.ph='load';R();let t,l,k=S.next;
+ if(k=='trainer'){t='Entrenador '+(S.g+1);l=TR[S.g].split(',').map(x=>x.split(':')).map(([n,v])=>[n,+v,+v])}
+ else if(k=='gym'){const[n,m]=GY[S.g];t='Líder '+n;l=m.split(',').map(x=>{const[a,b,c,e]=x.split(':'),d=d6(),p=d*b+(+c),mn=S.g>=2?6:0;return[a,Math.max(mn,p),Math.max(mn,e?d*e:p)]})}
+ else{let[n,m]=LG[S.li];if(S.li==4)m=m.replace('Gyarados',({bulbasaur:'Charizard',charmander:'Blastoise',squirtle:'Venusaur'}[S.st]||'Gyarados'));t=(S.li<4?'Alto Mando: ':'')+n;l=m.split(',').map(x=>x.split(':')).map(([a,v])=>[a,+v,+v])}
+ if(S.mode=='rt')l=l.map(([n,p,h])=>{const q=ALL.filter(x=>k=='liga'||!LEG.includes(x));return[nmz(q[Math.random()*q.length|0]),p,h]});
+ const mons=await Promise.all(l.map(([n,p,h])=>mk(n,p,h)));mons.forEach(m=>m.fo=1);S.B={kind:k,title:t,mons,fi:0,cur:null};S.ph='pick';S.lg=[];S.sub=null;R()}
+function lead(i){S.B.cur=S.team[i];S.ph='battle';S.sub=null;R()}
+function atkCalc(a,d,ch,who){const ty=a.a[ch?1:0],base=ch?Math.floor(3*a.P/4):Math.floor(a.P/2),tx=`${who} usa ${ch?'ataque cargado':'ataque básico'} (${TY[ty][0]})`;
+ if(ch){const h=d6();if(h<4)return[0,tx+` — 🎲${h}: ¡falla!`]}
+ const r=d6(),m=[-2,-1,0,0,1,2][r-1],se=d.t.some(t=>SE[ty].includes(t));let x=Math.max(0,base+m);if(se)x+=2;
+ return[x,tx+` — 🎲${r} (${m>=0?'+':''}${m}): ${x} de daño${se?' ¡supereficaz!':''}`]}
+function turn(act,i){const B=S.B,me=B.cur,foe=B.mons[B.fi],L=[];let dF=0;S.sub=null;
+ if(act=='sw'){B.cur=S.team[i];L.push(`Cambias a ${B.cur.n}.`)}
+ else if(act=='heal'){const p=S.team[i];S.heals--;S.usedHeal=1;p.H=p.M;L.push(`💊 ${p.n} se cura por completo (${p.M} PS).`)}
+ else{const[x,t]=atkCalc(me,foe,act=='c',me.n);dF=x;L.push(t)}
+ const tg=B.cur,[x2,t2]=atkCalc(foe,tg,B.kind!='trainer'&&Math.random()<.3,foe.n+' (rival)');L.push(t2);
+ foe.H=Math.max(0,foe.H-dF);tg.H=Math.max(0,tg.H-x2);
+ if(tg.H<=0){L.push(`💥 ${tg.n} se debilita.`);if(S.mode=='nuz'){S.team=S.team.filter(p=>p!==tg);S.dead.push(tg);S.deaths++}else tg.f=1}
+ if(foe.H<=0)L.push(`💥 ${foe.n} rival se debilita.`);
+ S.lg=L;const left=B.mons.some(m=>m.H>0);
+ if(!alive().length){S.won=0;S.res=()=>lose(left?'':'Los últimos Pokémon de ambos bandos cayeron en el mismo turno.');S.ph='end';return R()}
+ if(!left){S.won=1;S.res=win;S.ph='end';return R()}
+ if(foe.H<=0)B.fi=B.mons.findIndex(m=>m.H>0);
+ S.ph=tg.H<=0?'pick':'battle';R()}
+function win(){const B=S.B,k=B.kind;S.msg=`🏆 ¡Venciste a ${B.title}!`;
+ if(S.mode=='tut'){S.ph='tdone';return R()}
+ if(k=='trainer'){alive().forEach(p=>p.H=Math.min(p.M,p.H+2));S.next='gym';S.ph='hub'}
+ else if(k=='gym'){S.g++;S.tok+=Math.min(3,S.g);S.team.forEach(p=>{p.f=0});S.team.forEach(p=>p.H=Math.min(p.M,p.H+5));S.heals=Math.min(S.mode=='nuz'?999:5,S.heals+1);S.msg+=` Ganas ${Math.min(3,S.g)} ficha(s) de evolución y +5 PS al equipo${S.mode!='nuz'?'; los debilitados reviven':''}.`;S.ph=S.g==8&&S.team.some(p=>MEGA.has(p.s)||GIGA.has(p.s))?'stone':'luck'}
+ else{S.li++;if(S.li>4){S.ph='win';gameWon()}else{S.next='liga';S.ph='hub'}}R()}
+function lose(extra){if(S.mode=='nuz'||S.B.kind=='liga'){S.msg=extra;S.ph='over'}
+ else{S.team.forEach(p=>{if(p.f){p.f=0;p.H=Math.ceil(p.M/2)}});S.msg=`Perdiste el combate contra ${S.B.title}. ${extra} Tu equipo revive con la mitad de su poder; puedes reintentarlo.`;S.ph='hub'}R()}
+
+// Lucky Box
+async function stone(i,k){const p=S.team[i];S.ph='load';R();const im=inf=>{if(!inf.fail){const a=p.sh&&inf.shiny?inf.shiny:inf.img;p.ai=a;if(!S.pm)p.img=a}};
+ if(k==1){let inf={fail:1};for(const x of['-mega-y','-mega']){inf=await info(p.s+x);if(!inf.fail)break}p.mg=1;p.P+=5;im(inf);dexK('m:'+p.s,p.ai);if(!inf.fail&&inf.t.join()!=p.t.join()){p.t=inf.t;p.a=atk(inf.t)}S.msg=`💎 ¡${p.n} megaevoluciona! +5 de poder.`}
+ else{p.gx=1;p.M+=5;if(!p.f)p.H=p.M;im(await info(p.s+'-gmax'));dexK('g:'+p.s,p.ai);S.msg=`🌀 ¡${p.n} se vuelve Gigamax! +5 de salud máxima y curación total.`}
+ S.ph='luck';R()}
+async function luck(){const r=S.mode=='tut'?6:d6(),hi=S.g>=4||S.mode=='tut',K=x=>x<=(hi?2:3)?'cap':x<=(hi?4:6)?'heal':'evo',o=K(r);
+ const O={cap:['poke-ball','🎒','Captura extra','Puedes intentar capturar un Pokémon más en la Ruta Bonus '+S.g+'.'],heal:['hyper-potion','💊','Curación total','Todo tu equipo recupera +6 PS.'],evo:['rare-candy','🍬','¡Evolución!','Elige entre +3 fichas de evolución o la forma regional de un Pokémon.']},im={};
+ await Promise.all(Object.keys(O).map(async k=>im[k]=await itm(O[k][0])));
+ const ic=(k,w)=>im[k]?`<img src="${im[k]}" width=${w}>`:'<b>'+O[k][1]+'</b>';
+ await spin('🎁 Abriendo Lucky Box…',[1,2,3,4,5,6].map(x=>ic(K(x),96)+`<span>${O[K(x)][2]}</span>`),r-1,`<h1 style="margin:0">${ic(o,170)}</h1><h2>${O[o][2]}</h2><p>${O[o][3]}</p>`);
+ S.msg=`🎁 Lucky Box: ${O[o][2]}. `;
+ if(o=='cap')startTramo(1);
+ else if(o=='heal'){alive().forEach(p=>p.H=Math.min(p.M,p.H+6));startTramo(0)}
+ else{S.ph='load';R();S.rg=[];for(const[i,p]of S.team.entries()){if(p.reg)continue;for(const x of['alola','galar','hisui']){const inf=await info(p.s+'-'+x);if(!inf.fail){S.rg.push([i,x,inf]);break}}}S.ph='luckevo';R()}}
+function ficha(){S.tok+=3;S.msg='Ganas +3 fichas de evolución.';startTramo(0)}
+async function regional(k){const[i,x,inf]=S.rg[k],p=S.team[i],a=p.sh&&inf.shiny?inf.shiny:inf.img;p.reg=x;p.t=inf.t;p.a=atk(inf.t);if(!p.nn)p.n+=' ('+x+')';p.ai=a;p.img=S.pm?await paintIt(a,p.n):a;dexK('r:'+p.s+'-'+x,a);unlock('r');S.trg=1;S.msg=`${p.n} cambia a su forma regional.`;startTramo(0)}
+
+// Render
+const rk=p=>{const r=RK[p.s]||RK[(EV[p.s]||{}).base];return r?r.r:0};
+const dm=p=>{let t=`⚔ Básico: ${TY[p.a[0]][0]} · ${Math.floor(p.P/2)} de daño\n💥 Cargado: ${TY[p.a[1]][0]} · ${Math.floor(3*p.P/4)} de daño (falla 50%)\n(dado: de -2 a +2; +2 si es supereficaz)`;if(!p.fo){const r=rk(p),e=evo(p);if(r)t+=`\n🏅 Rango ${r}`;if(e)t+=`\n⬆ Al evolucionar: +${e.evo} de poder y salud (${e.cost} fichas)`}return t};
+const card=(p,extra='')=>`<div class="pk ${p.f?'f':''}" data-tip="${dm(p)}">${p.img?`<img class="${p.sh?'shn':''}" src="${p.img}" alt="" onerror="this.style.display='none'">`:''}<b>${p.sh?'✨ ':''}${p.mg?'Mega ':''}${p.gx?'G-Max ':''}${p.n}</b>${p.nn?`<small>(${pretty(p.s)})</small>`:''}<div>${chips(p.t)}</div>${bar(p)}<span>❤ ${p.H}/${p.M} ⚡${p.P}${p.f?' 💤':''}</span><small>⚔ ${TY[p.a[0]][0]} / ${TY[p.a[1]][0]}</small>${extra}</div>`;
+function teamHtml(){const m=['cap','hub','rel'].includes(S.ph);return `<h3>Tu equipo (${S.team.length}/6)</h3><div class=tm>${S.team.map((p,i)=>{let a='';if(m){const e=evo(p);if(e&&S.ph!='rel')a+=`<button ${S.tok>=e.cost?'':'disabled'} onclick="evolve(${i})">⬆ ${pretty(e.to)} (${e.cost}🔸)</button>`;a+=`<button onclick="nick(${i})">✏ Mote</button><button class=rl onclick="rel(${i})">Liberar</button>`}return card(p,a)}).join('')}</div>${S.dead.length?`<small>☠ Descartes: ${S.dead.map(p=>p.n).join(', ')}</small>`:''}`}
+function R(){if(RX){const i=rulesHtml.indexOf('<div class=lg');$('#app').innerHTML=tr(rulesHtml.slice(0,i))+rulesHtml.slice(i);return}if(SX)return out(setHtml());if(AX)return out(achHtml());if(DX)return out(dexHtml());const ph=S.ph;let h='<h1>📓 Pokepaper</h1><p class=ctr><button onclick="DX=1;R()">📖 Pokédex</button> <button onclick="RX=1;R()">📜 Reglas</button> <button onclick="AX=1;R()">🏆 Logros</button> <button onclick="SX=1;R()">⚙ Ajustes</button>'+(S.ph!='mode'?' <button class=rl onclick="giveUp()">🏳 Rendirse</button>':'')+'</p>';
+ if(ph=='mode')h+=`<div class=msg id=fact>💡 ${FACTS[FI]}</div><h2 class=ctr>Elige el modo de juego</h2><p class=ctr>🖼 Imágenes: <button ${SET.pm?'':'disabled'} onclick="SET.pm=0;sS();R()">Normal</button> <button ${SET.pm?'disabled':''} onclick="SET.pm=1;sS();R()">🎨 Pintor</button></p><div class=opts><button class=mode onclick="init('normal')"><h2>Modo normal</h2>Los Pokémon debilitados quedan fuera hasta completar el gimnasio, cuando reviven.</button><button class=mode onclick="init('nuz')"><h2>☠ Modo Nuzlocke</h2>Un Pokémon debilitado muere para siempre. Si caen todos, pierdes la partida.</button><button class=mode onclick="init('tut')"><h2>🎓 Tutorial</h2>Aprende las mecánicas paso a paso.</button><button class=mode onclick="RM=!RM;R()"><h2>🎲 Modo Random</h2>Iniciales y Pokémon aleatorios.</button></div>${RM?`<div class=opts><button class=mode onclick="init('rn')"><h2>🎲 Random Normal</h2>Iniciales y rutas aleatorias; los rivales no cambian.</button><button class=mode onclick="init('rt')"><h2>🎲🎲 Random Total</h2>Además, entrenadores, líderes y Alto Mando son aleatorios.</button></div>`:''}`;
+ else{if(ph!='starter')h+=`<div class=st><span>${{nuz:'☠ Nuzlocke',tut:'🎓 Tutorial',rn:'🎲 Random Normal',rt:'🎲 Random Total'}[S.mode]||'Normal'}</span><span>🏅 Gimnasios ${S.g}/8</span><span>🔸 Fichas: ${S.tok}</span><span>💊 Curaciones: ${S.heals}${S.mode=='nuz'?'':'/5'}</span>${S.mode=='nuz'?`<span>💀 Muertos: ${S.deaths}</span>`:''}</div>`;
+ if(S.msg&&ph!='over')h+=`<div class=msg>${S.msg}</div>`;if(S.mode=='tut'&&tip())h+=`<div class=lg>🎓 <b>Tutorial:</b> ${tip()}</div>`;
+ if(ph=='starter'){const u=i=>`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${i}.png`;h+=`<h2 class=ctr>Elige a tu Pokémon inicial</h2><div class=opts style="justify-content:center">${(S.stl||[['Bulbasaur',1],['Charmander',4],['Squirtle',7]]).map(([n,i],k)=>`<button class=pk onclick="starter('${n}',${k})"><img class="${S.sh[k]?'shn':''}" src="${S.sh[k]?u('shiny/'+i):u(i)}" alt=""><b>${S.sh[k]?'✨ ':''}${n}</b></button>`).join('')}</div>`}
+ else if(ph=='load')h+='<h2 class=ctr>Cargando…</h2>';
+ else if(ph=='cap'){const c=S.q[0];h+=`<h2>🎒 ${c.l}</h2><p>Solo tienes un intento por ruta. Quedan ${S.q.length} ruta(s) en este tramo.</p>${c.mon?`<div class=ctr>${c.img?`<img class="${c.sh?'shn':''}" src="${c.img}" width=140 alt="">`:''}<h3>${c.sh?'✨ ':''}${c.mon}${c.sh?' SHINY ✨':''}</h3><button class=big onclick="ball()">🎲 Lanzar Pokéball</button></div>`:`<button class=big onclick="explore()">🎲 Explorar ruta</button>`}`}
+ else if(ph=='rel')h+=`<h2>Equipo completo</h2><p>Libera a uno de tus Pokémon para que entre <b>${S.pend.n}</b> (poder ${S.pend.P}).</p><div class=tm>${card(S.pend)}</div><p><button class=big onclick="skip()">🚫 No capturarlo (dejarlo ir)</button></p>`;
+ else if(ph=='hub'){const k=S.next,w=k=='trainer'?'Entrenador '+(S.g+1):k=='gym'?'Líder '+GY[S.g][0]:LG[S.li][0];h+=`<h2>Siguiente combate: ${w}</h2><p>Evoluciona o libera Pokémon ahora; no se puede durante el combate.</p><button class=big onclick="fight()">⚔ Combatir</button>${S.mode=='tut'&&!S.tlb?' <button class=big onclick="tlb()">🎁 Probar Lucky Box</button>':''}`}
+ else if(ph=='luck')h+=`<h2>🎁 Lucky Box</h2><button class=big onclick="luck()">🎲 Abrir</button>`;
+ else if(ph=='luckevo')h+=`<h2>🍬 Evolución</h2><button class=big onclick="ficha()">+3 fichas de evolución</button><h3>…o cambiar a forma regional:</h3><div class=opts>${S.rg.map(([i,x],k)=>`<button onclick="regional(${k})">${S.team[i].n} → ${x}</button>`).join('')||'Ninguno de tus Pokémon tiene forma regional disponible.'}</div>`;
+ else if(ph=='stone'){const o=S.team.map((p,i)=>[p,i]);h+=`<h2>🏆 Recompensa de Giovanni</h2><p>Elige <b>una</b>: una Megapiedra (+5 de poder a un Pokémon que pueda megaevolucionar) o un Gigamax (+5 de salud máxima y curación total).</p><div class=opts>${o.filter(([p])=>MEGA.has(p.s)&&!p.mg).map(([p,i])=>`<button onclick="stone(${i},1)">💎 Mega ${p.n}</button>`).join('')}${o.filter(([p])=>GIGA.has(p.s)).map(([p,i])=>`<button onclick="stone(${i},2)">🌀 Gigamax ${p.n}</button>`).join('')}</div>`}
+ else if(ph=='pick')h+=`<h2>${S.B.title}</h2><h3>Elige tu Pokémon</h3><div class=tm>${S.team.map((p,i)=>!p.f&&p.H>0?`<button class=pk onclick="lead(${i})" style="padding:0">${card(p)}</button>`:'').join('')}</div>${log()}`;
+ else if(ph=='battle'){const B=S.B,me=B.cur,f=B.mons[B.fi],sub=S.sub;h+=`<h2>${B.title} <small>(rival ${B.fi+1}/${B.mons.length})</small></h2><div class=vs>${card(f)}${card(me)}</div>`;
+  if(sub){const o=S.team.map((p,i)=>({p,i})).filter(({p})=>!p.f&&p.H>0&&(sub=='sw'?p!==me:p.H<p.M));h+=`<h3>${sub=='sw'?'¿A quién sacas?':'¿A quién curas? (recupera toda su vida)'}</h3><div class=tm>${o.map(({p,i})=>`<button class=pk onclick="turn('${sub}',${i})" style="padding:0">${card(p)}</button>`).join('')||'Nadie necesita curación.'}</div><button onclick="S.sub=null;R()">Cancelar</button>`}
+  else h+=`<div class=ac><button onclick="turn('b')">⚔ Básico · ${TY[me.a[0]][0]} (${Math.floor(me.P/2)})</button><button onclick="turn('c')">💥 Cargado · ${TY[me.a[1]][0]} (${Math.floor(3*me.P/4)}, falla 50%)</button><button onclick="S.sub='sw';R()">🔄 Cambiar</button><button ${S.heals>0?'':'disabled'} onclick="S.sub='heal';R()">💊 Curar (${S.heals})</button></div>`;h+=log()}
+ else if(ph=='end'){const B=S.B;h+=`<h2>${B.title}</h2><div class=vs>${card(B.mons[B.fi])}${card(B.cur)}</div>${log()}<div class="msg ctr" style="font-size:1.4em">${S.won?'🏆 ¡Ganaste el combate!':'💀 Perdiste el combate'}</div><p class=ctr><button class=big onclick="S.res()">Continuar ▶</button></p>`}
+ else if(ph=='over')h+=`<h2 class=ctr>💀 Fin de la partida</h2><p class=ctr>${S.msg||''} Llegaste a ${S.g} gimnasio(s).${S.mode=='nuz'?` Pokémon muertos: ${S.deaths}.`:''}</p><p class=ctr><button class=big onclick="S={ph:'mode'};R()">Nueva partida</button></p>`;
+ else if(ph=='tdone')h+=`<h2 class=ctr>🎓 ¡Tutorial completado!</h2><p class=ctr>Ya conoces captura, combate, evolución, Lucky Box, formas regionales y motes. ¡Elige un modo y sube a la Liga!</p><p class=ctr><button class=big onclick="S={ph:'mode'};R()">Volver al menú</button></p>`;
+ else if(ph=='win')h+=`<h2 class=ctr>🏆 ¡Eres el campeón de la Liga Pokémon!</h2>${S.mode=='nuz'?`<p class=ctr>Pokémon muertos: ${S.deaths}</p>`:''}<p class=ctr><button class=big onclick="S={ph:'mode'};R()">Nueva partida</button></p>`;
+ if(!['starter','load','over','win','end'].includes(ph)&&S.team.length&&ph!='pick')h+=teamHtml();
+ if(ph=='pick')h+=''}
+ out(h)}
+const log=()=>S.lg.length?`<div class=lg>${S.lg.map(x=>`<p>${x}</p>`).join('')}</div>`:'';
+R();
+</script></body></html>
